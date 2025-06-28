@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div class="ad_list">
+        <ul>
+        {% for ad in ads %}
+            <li class="ad_component">
+                <p>{{ad.title}}</p>
+                {% if request.user == ad.user %}
+                    <a href="{% url 'ad_update' ad.id %}">Редактировать</a>
+                    <a href="{% url 'ad_delete' ad.id %}">Удалить</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
