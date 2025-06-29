@@ -5,6 +5,10 @@
     <title>Title</title>
 </head>
 <body>
-    <h1>Page of {{ profile.user.username }}</h1>
+    {% if request.user == profile.user %}
+        <h1>Здравствуйте, {{ user.username}}</h1>
+    {% else %}
+        <h1>Page of {{ profile.user.username }}</h1>
+    {% endif %}
 </body>
 </html>

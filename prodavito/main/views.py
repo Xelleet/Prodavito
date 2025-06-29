@@ -5,6 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 
 def profile_view(request, index):
+    try:
+        Profile.objects.get(id=index)
+    except Exception as e:
+        return render(request, 'error.html', {'error': e})
     return render(request, 'profile.html', {'profile': Profile.objects.get(id=index)})
 
 def register_view(request):
@@ -29,7 +33,7 @@ def login_view(request):
         if user is not None:
             login(request, user)
 
-            return redirect('ad_list')  # замени на нужный URL
+            return redirect('ad_list')
         else:
             # Неверные данные
             return render(request, 'login.html', {
@@ -72,5 +76,4 @@ def ad_delete(request, pk):
 
 def ad_list(request):
     ads = Ad.objects.all()
-    print(request.user)
     return render(request, 'ads/ad_list.html', {'ads': ads})

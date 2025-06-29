@@ -17,7 +17,7 @@ class Ad(models.Model):
     )
     title = models.CharField(max_length=200)
     description = models.TextField()
-    image_url = models.URLField(blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True) #Нафига мы требуем у пользователя URL изображения, будто оно уже где-то загружено?
     category = models.CharField(max_length=100)
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
