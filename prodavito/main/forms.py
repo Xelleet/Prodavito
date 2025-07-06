@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Ad, ExchangeProposal
+from .models import User, Ad, ExchangeProposal, Message
 
 
 class RegisterForm(UserCreationForm):
@@ -26,3 +26,8 @@ class ExchangeProposalForm(forms.ModelForm):
 
             if user:
                 self.fields['ad_sender'].queryset = Ad.objects.filter(user=user)
+
+class MessageForm(forms.ModelForm):
+    class Meta:
+        model = Message
+        fields = ['receiver', 'content']

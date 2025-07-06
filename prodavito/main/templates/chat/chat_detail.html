@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h2>Чат с {{other_user.username}}</h2>
+    <div style="border:1px solid #ccc; padding:10px;height:300px;overflow-y:scroll">
+        {% for msg in messages %}
+            <div style="margin:5px 0;{% if msg.sender == request.user %} text-align:right; {%endif %}">
+                <strong>{{msg.sender}}:</strong> {{msg.content}}
+            </div>
+        {% endfor %}
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <!-- {{ form.as_p}} -->
+        <button type="submit">Отправить</button>
+    </form>
+    <a href="{% url 'inbox' %}">К списку собеседников</a>
+</body>
+</html>

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import RegisterForm, AdForm, ExchangeProposalForm
-from .models import User, Profile, Ad, ExchangeProposal
+from .forms import RegisterForm, AdForm, ExchangeProposalForm, MessageForm
+from .models import User, Profile, Ad, ExchangeProposal, Message
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -145,3 +145,38 @@ def my_proposals(request):
         'proposals_sent': proposal_sent,
         'proposals_received': proposal_received
     })
+
+@login_required()
+def send_message(request, user_id):
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = request.user
+            message.receiver = get_object_or_404(User, id=user_id)
+            message.save()
+            return redirect('chat_with', user_id=message.receiver.id)
+    else:
+        form = MessageForm()
+
+    return render(request, 'chat/send_message.html', {'form': form, 'receiver': get_object_or_404(User, id=user_id)})
+
+@login_required()
+def chat_with(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+    messages = Message.objects.filter(
+        (Q(sender=request.user) & Q(receiver=other_user)) |
+        (Q(sender=other_user) & Q(receiver=request.user))
+    )
+    Message.objects.filter(receiver=request.user, sender=other_user, is_read=False).update(is_read=True)
+    return render(request, 'chat/chat_detail.html', {
+        'messages': messages,
+        'other_user': other_user
+    })
+
+@login_required()
+def inbox(request):
+    sent_users = User.objects.filter(sent_messages__receiver=request.user).distinct()
+    received_users = User.objects.filter(received_messages__sender=request.user).distinct()
+    users = (sent_users | received_users).distinct().exclude(id=request.user.id)
+    return render(request, 'chat/inbox.html', {'users': users})

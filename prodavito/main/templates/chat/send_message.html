@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <H2>Написать {{receiver.username}}</H2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p}}
+        <button type="submit">Отправить</button>
+    </form>
+<a href="{% url 'ad_list' %}">Отмена</a>
+</body>
+</html>
