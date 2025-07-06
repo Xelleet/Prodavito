@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h2>Изменить статус предложения</h2>
+    <form method="post">
+        {% csrf_token %}
+        <select name="status">
+            {% for key, label in proposal.get_STATUS_CHOICES %}
+                <option value="{{ key }}">{% if proposal.status == key %}selected {% endif %}>{{label}}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Сохранить</button>
+    </form>
+</body>
+</html>

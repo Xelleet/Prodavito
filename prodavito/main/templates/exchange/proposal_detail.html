@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h2>Детали предложения</h2>
+<p><strong>От:</strong>{{ proposal.ad_sender.title}}</p>
+<p><strong>Кому:</strong>{{ proposal.ad_receiver.title}}</p>
+<p><strong>Комментарий:</strong>{{ proposal.comment}}</p>
+<p><strong>Статус:</strong>{{ proposal.get_status_display}}</p>
+
+{% if request.user == proposal.ad_receiver.user %}
+    <a href="{% url 'update_proposal_status' proposal.pk %}">Изменить статус</a>
+{% endif %}
+</body>
+</html>

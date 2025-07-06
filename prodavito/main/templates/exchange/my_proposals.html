@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h2>Мои предложения</h2>
+
+<h3>Исходящие предложения</h3>
+<ul>
+  {% for p in proposals_sent %}
+    <li><a href="{% url 'proposal_detail' p.id %}">{{ p.ad_sender.title }} → {{ p.ad_receiver.title }}</a></li>
+  {% endfor %}
+</ul>
+
+<h3>Входящие предложения</h3>
+<ul>
+  {% for p in proposals_received %}
+    <li><a href="{% url 'proposal_detail' p.id %}">{{ p.ad_sender.title }} → {{ p.ad_receiver.title }}</a></li>
+  {% endfor %}
+</ul>
+</body>
+</html>

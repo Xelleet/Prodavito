@@ -11,4 +11,8 @@ urlpatterns = [
     path('ad_update/<int:pk>', views.ad_update, name='ad_update'),
     path('ad_delete/<int:pk>', views.ad_delete, name='ad_delete'),
     path('', views.ad_list, name='ad_list'),
+    path('exchange/create/', views.create_exchange_proposal, name='create_exchange_proposal'),
+    path('exchange/<int:pk>', views.proposal_detail, name='proposal_detail'),
+    path('exchange/<int:pk>/update_status', views.update_proposal_status, name='update_proposal_status'),
+    path('exchange/my/', views.my_proposals, name='my_proposals')
 ]

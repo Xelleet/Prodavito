@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import RegisterForm, AdForm
-from .models import User, Profile, Ad
+from .forms import RegisterForm, AdForm, ExchangeProposalForm
+from .models import User, Profile, Ad, ExchangeProposal
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 def profile_view(request, index):
     try:
@@ -75,5 +77,71 @@ def ad_delete(request, pk):
     return render(request, 'ads/ad_confirm_delete.html', {'ad': ad})
 
 def ad_list(request):
+    query = request.GET.get('q')
+    category = request.GET.get('category')
+    condition = request.GET.get('condition')
     ads = Ad.objects.all()
-    return render(request, 'ads/ad_list.html', {'ads': ads})
+    if query:
+        ads = ads.filter(Q(title__icontains=query) | Q(description__icontains=query))
+    if category:
+        ads = ads.filter(category__iexact=category)
+    if condition:
+        ads = ads.filter(condition=condition)
+    paginator = Paginator(ads, 10)
+    page = request.GET.get('page')
+    try:
+        ads_page = paginator.page(page)
+    except PageNotAnInteger:
+        ads_page = paginator.page(1)
+    except EmptyPage:
+        ads_page = paginator.page(paginator.num_pages)
+    return render(request, 'ads/ad_list.html', {'ads': ads, 'query': query, 'filter_category': category, 'filter_condition': condition})
+
+@login_required()
+def create_exchange_proposal(request):
+    if request.method == 'POST':
+        form = ExchangeProposalForm(request.POST, user=request.user)
+        if form.is_valid():
+            proposal = form.save(commit=False)
+            if proposal.ad_sender == proposal.ad_receiever:
+                form.add_error(None, 'Нельзя обменять объявление на само себя')
+            else:
+                proposal.save()
+                return redirect('proposal_detail', pk=proposal.pk)
+    else:
+        form = ExchangeProposalForm(user=request.user)
+    return render(request, 'exchange/proposal_form.html', {'form': form})
+
+@login_required()
+def proposal_detail(request, pk):
+    proposal = get_object_or_404(ExchangeProposal, pk=pk)
+    if request.user not in [proposal.ad_sender.user, proposal.ad_receiever.user]:
+        return redirect('ad_list')
+    return render(request, 'exchange/proposal_detail.html', {'proposal': proposal})
+
+@login_required()
+def update_proposal_status(request, pk):
+    proposal = get_object_or_404(ExchangeProposal, pk=pk)
+    if request.user != proposal.ad_receiever.user:
+        return redirect('proposal_detail', pk=pk)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in dict(ExchangeProposal.STATUS_CHOICES):
+            proposal.status = new_status
+            proposal.save()
+            if new_status == 'accepted':
+                proposal.ad_sender.user.email_user(
+                    'Ваше предложение обмена принято',
+                    f'Пользователь принял обмен между "{proposal.ad_sender.title}" и "{proposal.ad_receiever.title}"'
+                )
+                return redirect('proposal_detail', pk=pk)
+    return render(request, 'exchange/update_status.html', {'proposal': proposal})
+
+@login_required()
+def my_proposals(request):
+    proposal_sent = ExchangeProposal.objects.filter(ad_sender_user=request.user)
+    proposal_received = ExchangeProposal.objects.filter(ad_receiver_user=request.user)
+    return render(request, 'exchange/my_proposals.html', {
+        'proposals_sent': proposal_sent,
+        'proposals_received': proposal_received
+    })

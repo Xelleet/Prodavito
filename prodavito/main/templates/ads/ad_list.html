@@ -5,6 +5,21 @@
     <title>Title</title>
 </head>
 <body>
+    <form method="get">
+        <input type="text" name="q" placeholder="Поиск..." value="{{ request.GET.q}}">
+        <select name="category">
+            <option value="">Все категории</option>
+            <option value="tech">{% if request.GET.condition == "tech" %}selected {%endif %}Техника</option>
+            <option value="cars"> {% if request.GET.condition == "cars" %}selected {%endif %} Автомобили</option>
+            <option value="work">{% if request.GET.condition == "work" %} selected {% endif %} Работа</option>
+        </select>
+        <select name="condition">
+            <option value="">Все состояния</option>
+            <option value="new"> {% if request.GET.condition == "new" %}selected {%endif %} Новый</option>
+            <option value="used">{% if request.GET.condition == "used" %} selected {% endif %} б/у</option>
+        </select>
+        <button type="submit">Фильтровать</button>
+    </form>
     <div class="ad_list">
         <ul>
         {% for ad in ads %}
