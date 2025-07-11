@@ -168,6 +168,11 @@ def chat_with(request, user_id):
         (Q(sender=request.user) & Q(receiver=other_user)) |
         (Q(sender=other_user) & Q(receiver=request.user))
     )
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            Message.objects.create(sender=request.user, receiver=other_user, content=content)
+            return redirect('chat_with', user_id=user_id)
     Message.objects.filter(receiver=request.user, sender=other_user, is_read=False).update(is_read=True)
     return render(request, 'chat/chat_detail.html', {
         'messages': messages,

@@ -15,7 +15,7 @@
     </div>
     <form method="post">
         {% csrf_token %}
-        <!-- {{ form.as_p}} -->
+        <textarea name="content" placeholder="Введите ваше сообщение..."></textarea>
         <button type="submit">Отправить</button>
     </form>
     <a href="{% url 'inbox' %}">К списку собеседников</a>
