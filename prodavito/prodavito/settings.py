@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 
 LOGIN_URL = '/login/'
 
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main'
+    'main',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -69,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'prodavito.wsgi.application'
+ASGI_APPLICATION = 'prodavito.wsgi.application'
 
 
 # Database
