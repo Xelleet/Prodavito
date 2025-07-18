@@ -5,13 +5,11 @@
 </head>
 <body>
     <h2>Чат с {{ other_user.username }}</h2>
-
     <div id="chat-log" style="border:1px solid #ccc; padding:10px; height:300px; overflow-y:scroll;">
         {% for message in messages %}
             <div><b>{{ message.sender }}</b>: {{ message.content }}</div>
         {% endfor %}
     </div>
-
     <form id="chat-form" style="margin-top:10px;">
         {% csrf_token %}
         <input type="text" id="chat-message-input" placeholder="Введите сообщение..." autofocus style="width:80%; padding:5px;" />
@@ -21,7 +19,6 @@
     <script>
         const userId = "{{ request.user.id }}";
         const otherUserId = "{{ other_user.id }}";
-
         const chatSocket = new WebSocket(
             'ws://' + window.location.host + '/ws/chat/' + otherUserId + '/'
         );
@@ -30,10 +27,10 @@
             const data = JSON.parse(e.data);
             const isMyMessage = data.sender == userId;
             const from = isMyMessage ? "Вы" : "{{ other_user.username }}";
+
             const messageElement = document.createElement('div');
             messageElement.innerHTML = <b>${from}</b>: ${data.message};
             document.getElementById('chat-log').appendChild(messageElement);
-            // Прокрутка вниз
             document.getElementById('chat-log').scrollTop = document.getElementById('chat-log').scrollHeight;
         };
 
@@ -45,13 +42,9 @@
             e.preventDefault();
             const messageInput = document.getElementById('chat-message-input');
             const message = messageInput.value;
-
             if (message.trim() === '') return;
 
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
-
+            chatSocket.send(JSON.stringify({ 'message': message }));
             messageInput.value = '';
         };
     </script>

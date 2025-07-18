@@ -161,25 +161,28 @@ def send_message(request, user_id):
 
     return render(request, 'chat/send_message.html', {'form': form, 'receiver': get_object_or_404(User, id=user_id)})
 
-@login_required()
+@login_required
 def chat_with(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
     messages = Message.objects.filter(
         (Q(sender=request.user) & Q(receiver=other_user)) |
         (Q(sender=other_user) & Q(receiver=request.user))
-    )
+    ).order_by('created_at')
+
+    Message.objects.filter(receiver=request.user, sender=other_user, is_read=False).update(is_read=True)
+
     if request.method == 'POST':
         content = request.POST.get('content')
         if content:
             Message.objects.create(sender=request.user, receiver=other_user, content=content)
             return redirect('chat_with', user_id=user_id)
-    Message.objects.filter(receiver=request.user, sender=other_user, is_read=False).update(is_read=True)
+
     return render(request, 'chat/chat_detail.html', {
         'messages': messages,
         'other_user': other_user
     })
 
-@login_required()
+@login_required
 def inbox(request):
     sent_users = User.objects.filter(sent_messages__receiver=request.user).distinct()
     received_users = User.objects.filter(received_messages__sender=request.user).distinct()
