@@ -29,7 +29,7 @@
             const from = isMyMessage ? "Вы" : "{{ other_user.username }}";
 
             const messageElement = document.createElement('div');
-            messageElement.innerHTML = <b>${from}</b>: ${data.message};
+            messageElement.innerHTML = `<b>${from}</b>: ${data.message}`;
             document.getElementById('chat-log').appendChild(messageElement);
             document.getElementById('chat-log').scrollTop = document.getElementById('chat-log').scrollHeight;
         };
