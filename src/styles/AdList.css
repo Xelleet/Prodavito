@@ -1,0 +1,46 @@
+.ad-filter-form {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.ad-filter-form input, .ad-filter-form select, .ad-filter-form button {
+  padding: 8px;
+}
+
+.ad-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+/* src/styles/AdItem.css */
+.ad-item {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ad-item p {
+  margin: 0;
+  font-weight: bold;
+}
+
+.ad-item__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ad-item__actions a {
+  text-decoration: none;
+  color: #007bff;
+  font-size: 0.9em;
+}
+
+.ad-item__actions a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,43 @@
+/* src/styles/Header.css */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.header__logo a {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-decoration: none;
+  color: #343a40;
+}
+
+.header__nav {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.header__nav a {
+  text-decoration: none;
+  color: #007bff;
+}
+
+.header__nav a:hover {
+  text-decoration: underline;
+}
+
+.header__logout-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.header__logout-btn:hover {
+  color: #0056b3;
+}

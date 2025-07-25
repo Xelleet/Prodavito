@@ -1,0 +1,9 @@
+# Для запуска этого React-проекта используйте npm или yarn и зависимости из package.json
+# Если нужен requirements.txt для Python, он не требуется для фронтенда на React.
+# Для установки зависимостей выполните:
+#   npm install
+# или
+#   yarn install
+
+# Основные зависимости (см. package.json):
+# react, react-dom, react-router-dom, react-scripts, axios и др. 

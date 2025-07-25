@@ -1,0 +1,14 @@
+.ad-list {
+  max-width: 800px;
+  margin: 32px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ad-list-empty {
+  text-align: center;
+  color: #888;
+  margin-top: 48px;
+  font-size: 1.1rem;
+} 
