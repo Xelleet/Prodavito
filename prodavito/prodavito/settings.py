@@ -74,7 +74,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',  # для разработки
         # 'rest_framework.permissions.IsAuthenticated',  # для продакшна
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 5,  # Кол-во объявлений на страницу
 }
 
 SIMPLE_JWT = {
