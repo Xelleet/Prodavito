@@ -1,15 +1,27 @@
 // src/pages/AdCreatePage.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import './AdForm.css';
+import { useAuth } from '../context/AuthContext';
 
 const AdCreatePage = () => {
   const [formData, setFormData] = useState({
-    title: '', description: '', image_url: '', category: '', condition: ''
+    title: '', description: '', image_url: '', category: '', condition: '', user: ''
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+  if (user) {
+    setFormData(prev => ({
+      ...prev,
+      user: user.id
+    }));
+  }
+}, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,7 +34,7 @@ const AdCreatePage = () => {
       const csrfRes = await api.get('/csrf/');
       const csrfToken = csrfRes.data.csrfToken;
 
-      await api.post('/add_ad/', formData, {
+      await api.post('/api/add_ad/', formData, {
         headers: {
           'X-CSRFToken': csrfToken,
         }

@@ -8,17 +8,26 @@ const ChatPage = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await api.get('/chat/');
-        setUsers(res.data.users || res.data); // Адаптируйте под формат ответа
-      } catch (err) {
-        console.error("Ошибка загрузки пользователей чата:", err);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get('/chat/');
+      console.log('Chat users response:', res.data);
 
-    fetchUsers();
-  }, []);
+      if (Array.isArray(res.data)) {
+        setUsers(res.data);
+      } else if (Array.isArray(res.data.users)) {
+        setUsers(res.data.users);
+      } else {
+        setUsers([]);
+      }
+    } catch (err) {
+      console.error("Ошибка загрузки пользователей чата:", err);
+      setUsers([]);
+    }
+  };
+
+  fetchUsers();
+}, []);
 
   return (
     <div className="chat-page">

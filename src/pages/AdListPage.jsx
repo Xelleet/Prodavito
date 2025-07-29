@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import AdItem from '../components/AdItem';
 import './AdList.css';
+import { useAuth } from '../context/AuthContext'; //Временно
 
 const TEST_ADS = [
   {
@@ -48,17 +49,25 @@ const AdListPage = () => {
   });
 
   useEffect(() => {
-    const fetchAds = async () => {
-      try {
-        // Для теста: если API не отвечает, показываем тестовые объявления
-        const res = await api.get('/?q=' + filters.q + '&category=' + filters.category + '&condition=' + filters.condition);
-        setAds(res.data.ads || res.data);
-      } catch (err) {
-        setAds(TEST_ADS);
+  const fetchAds = async () => {
+    try {
+      const res = await api.get('/?q=' + filters.q + '&category=' + filters.category + '&condition=' + filters.condition);
+
+      // Проверяем, что мы получили массив
+      if (Array.isArray(res.data)) {
+        setAds(res.data);
+      } else if (Array.isArray(res.data.ads)) {
+        setAds(res.data.ads);
+      } else {
+        // Если не массив — ставим пустой массив, чтобы не ломалось
+        setAds([]);
       }
-    };
-    fetchAds();
-  }, [filters]);
+    } catch (err) {
+      setAds(TEST_ADS);
+    }
+  };
+  fetchAds();
+}, [filters]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
