@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }) => {
           setUser(user); // или как у тебя настроено
           // можно ещё проверить access токен на валидность
           }
-          console.log(user);
         //setUser(res.data);
       } catch (err) {
         setUser(null);

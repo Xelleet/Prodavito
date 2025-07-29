@@ -33,7 +33,7 @@ const AdCreatePage = () => {
       // CSRF токен
       const csrfRes = await api.get('/csrf/');
       const csrfToken = csrfRes.data.csrfToken;
-
+      console.log(typeof user.id, user.id);
       await api.post('/api/add_ad/', formData, {
         headers: {
           'X-CSRFToken': csrfToken,
