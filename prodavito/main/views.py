@@ -1,10 +1,49 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .forms import RegisterForm, AdForm, ExchangeProposalForm, MessageForm
 from .models import User, Profile, Ad, ExchangeProposal, Message
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import RegisterSerializer, AdSerializer, GetAdSerializer
+from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.pagination import PageNumberPagination
+
+class AdPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'csrfToken': request.META.get('CSRF_COOKIE', '')})
+
+class LoginView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                }
+            })
+        else:
+            return Response({'error': 'Неверные данные'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 def profile_view(request, index):
     try:
@@ -12,6 +51,44 @@ def profile_view(request, index):
     except Exception as e:
         return render(request, 'error.html', {'error': e})
     return render(request, 'profile.html', {'profile': Profile.objects.get(id=index)})
+
+class RegisterAPIView(APIView):
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": True}, status=status.HTTP_201_CREATED)
+        return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class AdAPIView(APIView):
+    def post(self, request):
+        serializer = AdSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": True}, status=status.HTTP_201_CREATED)
+        return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class AdListView(ListAPIView):
+    serializer_class = GetAdSerializer
+    pagination_class = AdPagination
+
+    def get_queryset(self):
+        query = self.request.GET.get('q', '')
+        category = self.request.GET.get('category', '')
+        condition = self.request.GET.get('condition', '')
+        ads = Ad.objects.select_related('user', 'user__profile').all()
+        if query:
+            ads = ads.filter(Q(title__icontains=query) | Q(description__icontains=query))
+        if category:
+            ads = ads.filter(category__iexact=category)
+        if condition:
+            ads = ads.filter(condition=condition)
+        return ads.order_by('-created_at')
+
+class AdDetailView(RetrieveAPIView):
+    queryset = Ad.objects.select_related('user', 'user__profile').all()
+    serializer_class = GetAdSerializer
+    lookup_field = 'pk'
 
 def register_view(request):
     if request.method == 'POST':
