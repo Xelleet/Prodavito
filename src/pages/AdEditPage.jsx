@@ -15,7 +15,7 @@ const AdEditPage = () => {
   useEffect(() => {
     const fetchAd = async () => {
       try {
-        const res = await api.get(`/ad_update/${id}/`); // Получение данных для формы
+        const res = await api.get(`/api/ads/${id}/`); // Получение данных для формы
         setFormData(res.data); // Предполагаем, что Django возвращает данные объявления
       } catch (err) {
         console.error("Ошибка загрузки объявления:", err);
@@ -33,12 +33,11 @@ const AdEditPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const csrfRes = await api.get('/csrf/');
-      const csrfToken = csrfRes.data.csrfToken;
+      const token = localStorage.getItem('access');
 
-      await api.post(`/ad_update/${id}/`, formData, {
+      await api.put(`/api/ad_update/${id}/`, formData, {
         headers: {
-          'X-CSRFToken': csrfToken,
+          Authorization: `Bearer ${token}`,
         }
       });
       navigate('/ads');

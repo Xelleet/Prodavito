@@ -19,7 +19,7 @@ const AdListPage = () => {
     const fetchAds = async () => {
       try {
         const params = { ...filters };
-        const res = await api.get('http://127.0.0.1:8000/api/ads/', { params });
+        const res = await api.get('/api/ads/', { params });
 
         setAds(res.data.results || []);
         setPagination({
@@ -51,7 +51,7 @@ const AdListPage = () => {
     setSearchParams({ ...filters, page: newPage });
   };
 
-  const totalPages = Math.ceil(pagination.count / 5); // если PAGE_SIZE = 5
+  const totalPages = Math.ceil(pagination.count / 5);
 
   return (
     <div className="ad-list-page">

@@ -10,7 +10,9 @@ const ChatPage = () => {
   useEffect(() => {
   const fetchUsers = async () => {
     try {
-      const res = await api.get('/chat/');
+      const res = await api.get('/api/chat/inbox/', {
+        withCredentials: true,
+      });
       console.log('Chat users response:', res.data);
 
       if (Array.isArray(res.data)) {

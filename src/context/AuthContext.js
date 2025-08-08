@@ -10,50 +10,48 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        //const res = await api.get('/api/user/'); // Предполагаемый эндпоинт для получения текущего пользователя
-        const access = localStorage.getItem('access');
-        const user = JSON.parse(localStorage.getItem('user'));
-
-        if (access && user) {
-          setUser(user); // или как у тебя настроено
-          // можно ещё проверить access токен на валидность
-          }
-        //setUser(res.data);
-      } catch (err) {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const login = async (username, password) => {
+ useEffect(() => {
+  const fetchUser = async () => {
     try {
-      // CSRF токен может потребоваться
-      const csrfRes = await api.get('/csrf/'); // Эндпоинт для получения CSRF токена
-      const csrfToken = csrfRes.data.csrfToken;
-
-      const res = await api.post('/api/login/', { username, password }, {
-        headers: {
-          'X-CSRFToken': csrfToken,
-        }
-      });
-      setUser(res.data.user); // Предполагаем, что бэкенд возвращает пользователя
-      localStorage.setItem('access', res.data.access);
-      localStorage.setItem('refresh', res.data.refresh);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      console.log(localStorage.getItem('access'));
-      return { success: true };
+      const res = await api.get('/api/me/', { withCredentials: true });
+      setUser(res.data.user);
+      console.log(user)
+      //localStorage.setItem('user', JSON.stringify(res.data.user));
     } catch (err) {
-      console.error("Login error:", err);
-      return { success: false, error: err.response?.data?.error || 'Ошибка входа' };
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
   };
+
+  fetchUser();
+}, []);
+
+
+  const login = async (username, password) => {
+  try {
+    await api.post('/api/logout/', {}, { withCredentials: true });
+    setUser(null);
+  } catch (err) {
+    console.error('Logout failed', err);
+  }
+
+  try {
+    const csrfRes = await api.get('/csrf/');
+    const csrfToken = csrfRes.data.csrfToken;
+
+    const res = await api.post('/api/login/', { username, password }, {
+      headers: { 'X-CSRFToken': csrfToken },
+      withCredentials: true
+    });
+    console.log(res.data.user)
+    setUser(res.data.user);
+    return { success: true };
+  } catch (err) {
+    console.error("Login error:", err);
+    return { success: false, error: err.response?.data?.error || 'Ошибка входа' };
+  }
+};
 
   const logout = async () => {
     try {
@@ -74,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop().split(';').shift();
     };
-    const csrfToken = getCookie('csrftoken');
+    const csrfToken = await api.get('/csrf/');
 
     const res = await api.post('/api/register/', { username, email, password1, password2 }, {
       headers: { 'X-CSRFToken': csrfToken }
