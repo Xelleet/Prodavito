@@ -10,11 +10,17 @@ from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer, AdSerializer, GetAdSerializer
+from .serializers import RegisterSerializer, AdSerializer, GetAdSerializer, MessageSerializer, ChangeAdSerializer, UserSerializer
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import api_view
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+from django.middleware import csrf
+
 
 class AdPagination(PageNumberPagination):
     page_size = 5
@@ -25,24 +31,57 @@ class AdPagination(PageNumberPagination):
 def get_csrf_token(request):
     return JsonResponse({'csrfToken': request.META.get('CSRF_COOKIE', '')})
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_me(request):
+    user = request.user
+    return Response({
+        'user': {
+                'id': user.id,
+                'username': user.username,
+            }
+    })
+
 class LoginView(APIView):
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
 
         user = authenticate(username=username, password=password)
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                }
-            })
-        else:
-            return Response({'error': 'Неверные данные'}, status=status.HTTP_401_UNAUTHORIZED)
+        if user is None:
+            return Response({'error': 'Invalid credentials'}, status=401)
+        # ... аутентификация пользователя ...
+        refresh = RefreshToken.for_user(user)
+        response = Response({
+            'user': {'id': user.id, 'username': user.username}
+        })
+        # Set JWT cookies (HttpOnly)
+        response.set_cookie('access_token', str(refresh.access_token),
+                            httponly=True, secure=True, samesite='Lax', path='/')
+        response.set_cookie('refresh_token', str(refresh),
+                            httponly=True, secure=True, samesite='Lax', path='/')
+        # Generate CSRF and send it to JS (cookie or body)
+        csrf_token = csrf.get_token(request)
+        # Option A: send CSRF in non-HttpOnly cookie (double-submit)
+        response.set_cookie('csrftoken', csrf_token, httponly=False, secure=True, samesite='Lax', path='/')
+        # Option B (alternative): return csrf_token in JSON so frontend stores it somewhere
+        # response.data['csrfToken'] = csrf_token
+        return response
+
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response({'success': 'Logged out'})
+        response.delete_cookie(
+            'access_token',
+            path='/',
+            samesite='Lax'
+        )
+        response.delete_cookie(
+            'refresh_token',
+            path='/',
+            samesite='Lax'
+        )
+        return response
 
 
 def profile_view(request, index):
@@ -68,6 +107,7 @@ class AdAPIView(APIView):
             return Response({"success": True}, status=status.HTTP_201_CREATED)
         return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class AdListView(ListAPIView):
     serializer_class = GetAdSerializer
     pagination_class = AdPagination
@@ -89,6 +129,71 @@ class AdDetailView(RetrieveAPIView):
     queryset = Ad.objects.select_related('user', 'user__profile').all()
     serializer_class = GetAdSerializer
     lookup_field = 'pk'
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_inbox(request):
+    sent_users = User.objects.filter(received_messages__sender=request.user).distinct()
+    received_users = User.objects.filter(sent_messages__receiver=request.user).distinct()
+    users = (sent_users | received_users).distinct().exclude(id=request.user.id)
+    return Response([
+        {
+            'id':user.id,
+            'username': user.username
+        }
+        for user in users
+    ])
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_chat_classes(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+    Message.objects.filter(
+        sender=other_user,
+        receiver=request.user,
+        is_read=False
+    ).update(is_read=True)
+    messages = Message.objects.filter(
+        (Q(sender=request.user) & Q(receiver=other_user)) |
+        (Q(sender=other_user) & Q(receiver=request.user))
+    ).order_by('created_at')
+    serializer = MessageSerializer(messages, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_send_message(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+    content = request.data.get('content', '').strip()
+    if not content:
+        return Response(
+            {'error': 'Сообщение не может быть пустым'},
+            status=400
+        )
+    message = Message.objects.create(
+        sender=request.user,
+        receiver=other_user,
+        content=content
+    )
+    serializer = MessageSerializer(message)
+    return Response(serializer.data, status=201)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_ad(request, id):
+    try:
+        ad = Ad.objects.get(id=id)
+        if ad.user != request.user:
+            return Response({'error': 'Not valid user'}, status=status.HTTP_403_FORBIDDEN)
+    except:
+        return Response({'error': 'Ad not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ChangeAdSerializer(ad, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 def register_view(request):
     if request.method == 'POST':

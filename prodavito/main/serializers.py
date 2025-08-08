@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.validators import UniqueValidator
-from .models import Ad, Profile
+from .models import Ad, Profile, Message
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
@@ -60,7 +60,20 @@ class AdSerializer(serializers.ModelSerializer):
             )
             return ad
 
+class ChangeAdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ad
+        fields = ['title', 'description', 'image_url', 'category', 'condition']
 
+        def put(self, data):
+            ad = User.objects.create(
+                title=data['title'],
+                description=data['description'],
+                image_url=data['image_url'],
+                category=data['category'],
+                condition=data['condition'],
+            )
+            return ad
 
 class GetAdSerializer(serializers.ModelSerializer):
     # Включаем информацию о пользователе и его профиле
@@ -79,4 +92,18 @@ class GetAdSerializer(serializers.ModelSerializer):
             'user',
             'user_profile',
             'created_at'
+        ]
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender_username = serializers.CharField(source='sender.username', read_only=True)
+    receiver_username = serializers.CharField(source='receiver.username', read_only=True)
+    class Meta:
+        model = Message
+        fields=[
+            'id',
+            'sender',
+            'receiver',
+            'content',
+            'created_at',
+            'is_read'
         ]

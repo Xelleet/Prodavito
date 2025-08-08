@@ -41,6 +41,14 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",  # или другой домен фронтенда
 ]
 
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_HTTPONLY = False       # должен быть доступен JS для double-submit
+CSRF_COOKIE_SECURE = False         # в проде — True, локально можно False
+CSRF_COOKIE_SAMESITE = "Lax"
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = "Lax"
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -52,7 +60,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'main'
+    'main',
+    #'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -69,7 +78,7 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # если JWT
+        'main.auth.CookieJWTAuthentication',  # если JWT
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',  # для разработки
@@ -80,8 +89,15 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'AUTH_COOKIE': 'access_token',
+    'AUTH_COOKIE_REFRESH': 'refresh_token',
+    'AUTH_COOKIE_SECURE': False,
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_SAMESITE': 'Lax',
+    #'ROTATE_REFRESH_TOKENS': True,
+    #'BLACKLIST_AFTER_ROTATION': True,
 }
 
 ROOT_URLCONF = 'prodavito.urls'
